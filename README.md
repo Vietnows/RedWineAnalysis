@@ -1,2 +1,2 @@
 # RedWineAnalysis
-Last one project from Udacity Data Scientis Nanogredee
+Last one project from Udacity Data Scientist Nanogredee
