@@ -387,6 +387,7 @@ ggplot(aes(x= quality, y= alcohol), data = wines) +
          y= 'Alcohol',
          title= 'Alcohol Vs. Quality')
 ```
+
 Algo interessante que percebi, é que vinhos com maior teor alcoolico tem mais tendência a serem melhor avaliados. Vinhos com mais de 13% de teor alcoolico tem por volta de avaliação acima de 7 (boa). Alguns valores mais extremos mostram isso.
 
 ### Acidity vs Quality
@@ -402,6 +403,7 @@ grid.arrange(ggplot(aes(x= quality, y= volatile.acidity), data = wines) +
          y= 'Volatile Acidity',
          title= 'Volatile Acidity Vs. Quality'))
 ```
+
 Pelo que pude perceber nestes plots, é que a medida que o Volatile acidity aumenta, tem um efeito negativo na qualidade.
 
 #### Fixed Acidity vs Quality
@@ -416,6 +418,7 @@ ggplot(data = wines, aes(x = alcohol, y = fixed.acidity)) +
 ```
 
  Já os vinhos melhores avaliados contem volatile acidity menor. Já fixed acidity parece não ter nenhum efeito sobre a qualidade final.
+ 
 
 #### Sulphates vs Quality 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -431,6 +434,7 @@ ggplot(aes(x= factor(quality), y= sulphates), data = wines) +
 
 Sulphates tem correlação com a qualidade, e a partir desse plot é possivel perceber que vinhos com menor quantidade de sulphates tem qualidade média, já os vinhos melhores avaliados contém uma maior quantidade de sulphates.
 
+
 #### Chrolides vs Quality
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x= factor(quality), y= chlorides), data = wines) +
@@ -445,6 +449,7 @@ ggplot(aes(x= factor(quality), y= chlorides), data = wines) +
 
 Duas variáveis que eu estava curioso para comparar chlorides e quality, devido a correlação de chlorides e sulphates e não haver forte correlação com quality. É possivel perceber que os vinhos melhores avaliados tem menores valores de chlorides.
 
+
 #### Density vs Quality
 ```{r}
 grid.arrange(ggplot(aes(x= quality, y= density), data = wines) +
@@ -456,6 +461,7 @@ grid.arrange(ggplot(aes(x= quality, y= density), data = wines) +
          y= 'Density',
          title= 'Density Vs. Quality'))
 ```
+
 
 #### Alcohol vs Density
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -496,6 +502,7 @@ ggplot(aes(x= factor(quality), y= pH), data = wines) +
        title= 'PH vs Quality')
 
 ```
+
 E novamente, algo diferente a se perceber, vinhos de melhor qualidade tendem a ter maiores taxas de ácidos citricos, porém o Ph se mantém bem proximo da neutralidade para vinhos de maior qualidade.
 
 
@@ -510,6 +517,7 @@ ggplot(aes(x= factor(quality), y= residual.sugar), data = wines) +
        y= 'Residual Sugar',
        title= 'Residual Sugar vs Quality')
 ```
+
 Residual sugar parece não surtir tanto efeito na qualidade final, mas o que é possivel perceber é grande parte dos vinhos médios tem mais açucar residual que os melhores avaliados.
 
 ### Observações
@@ -530,6 +538,7 @@ wines$Quality.Rating <- ifelse(wines$quality < 5, 'Ruim', ifelse(
 wines$Quality.Rating <- ordered(wines$Quality.Rating,
                        levels = c('Ruim', 'Médio', 'Bom'))
 ```
+
 
 #### Residual Sugar vs Alcohol vs Quality
 
@@ -556,6 +565,7 @@ summary(residualSugarModel)
 ```
 Realmente, Residual sugar não tem nenhuma relação direta a qualidade final dos vinhos.
 
+
 #### Density vs Citric Acid vs Quality
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(wines, aes(x = density, y = citric.acid, color = as.factor(quality))) +
@@ -567,7 +577,9 @@ ggplot(wines, aes(x = density, y = citric.acid, color = as.factor(quality))) +
   xlab("Density") +
   labs(color = "Quality level") + theme_gray()
 ```
+
 Neste plot é possível esclarecer a suposição de que os melhores vinhos tem acidez um pouco elevada e maior densidade. Enquantos os vinhos médios tem pouca acidez e mais densidade.
+
 
 #### Alcohol e Density vs Quality
 
@@ -584,6 +596,7 @@ ggplot(data = wines,
          title= 'Alcohol vs Density ajustados aos niveis de Quality')+ theme_dark()
 
 ```
+
 Com este plot é possivel esclarecer minha dúvida referente a essas duas variáveis, no qual podemos verificar que quanto maior o teor alcoolico, menor a densidade. E combinados podem afetar na qualidade final.
 
 Para verificar se realmente o alcool tem efeito na qualidade final farei uma regressão linear.
