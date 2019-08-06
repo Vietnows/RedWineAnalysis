@@ -1,0 +1,645 @@
+---
+title: "Analysis of Wine Quality Data"
+author: "Marcelo Oliveira"
+date: "30/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE}
+#Load all the required libraries
+library("ggplot2")
+library("dplyr")
+library("gridExtra")
+library(corrplot)
+```
+
+
+## Red Wine EDA on R
+
+Esta EDA inclui análises univariada, bivariada e multivariada em torno das principais propriedades químicas que influenciam a qualidade dos vinhos tintos.
+
+```{r}
+
+wines = read.csv('wineQualityReds.csv')
+```
+
+## Gráficos Univariados
+
+```{r}
+summary(wines$quality)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = wines, aes(x = quality)) +
+  geom_bar(width = 0.97, color = 'black',fill = I('yellow'))
+
+```
+
+A primeira coisa a se perceber no plot acima é que a maioria dos vinhos são de qualidade média. Os valores outliers são bem aproximados a vinhos de qualidades ruins e boas, será que os vinhos usados nas avaliações dos especialistas são de uma região especifica? De várias regiões?
+
+#### Fixed.acidity
+
+Normalmente se faz referencia ao ácido tartarico, uns dos principais ácidos encontrados em uvas e um dos principais ácidos do vinho.
+```{r}
+summary(wines$fixed.acidity)
+```
+
+```{r}
+grid.arrange(ggplot(wines, aes( x = 1, y = fixed.acidity )) + 
+               geom_jitter(alpha = 0.5 ) +
+               geom_boxplot(alpha = 0.2, color = 'red3' ), 
+             
+ggplot(data = wines, aes(x = fixed.acidity)) + 
+  geom_histogram(binwidth = 0.1, color = 'black',fill = I('red')),
+
+ggplot(data = wines, aes(x = fixed.acidity)) + scale_x_log10()+
+  geom_histogram(binwidth = 0.1, color = 'black',fill = I('red')))
+```
+
+A distribuição de Fixed Acidity tem a maior parte de seus dados inclinados mais positivamente, A mediana gira em torno de 8 e 9 mais, há muitos outliers do lado positivo.
+
+Após a eliminação de grande parte dos outliers com a aplicação do log10 para normalização dos dados, temos uma distribuição normal, que já era possivel enxergar, apesar do grande número de outliers.
+
+#### Volatile.acidity
+
+A acidez volátil refere-se aos ácidos destilados a vapor presentes no vinho, em grandes quantidades pode levar à um gosto desagradável.
+O nível médio de ácido acético em um vinho é inferior a 400 mg / L, embora os níveis possam variar de indetectáveis até 3 g / L.
+```{r}
+summary(wines$volatile.acidity)
+```
+
+```{r}
+grid.arrange(ggplot(wines, aes( x = 1, y = volatile.acidity )) + 
+               geom_jitter(alpha = 0.5 ) +
+               geom_boxplot(alpha = 0.2, color = 'red3' ), 
+             
+ggplot(data = wines, aes(x = volatile.acidity)) +
+  geom_histogram(binwidth = 0.1, color = 'black',fill = I('pink')),
+
+ggplot(data = wines, aes(x = volatile.acidity)) +scale_x_log10() +
+  geom_histogram(binwidth = 0.1, color = 'black',fill = I('pink')))
+
+```
+
+A distribuição de acidez volatil se assemelha a uma distribuição bimodal, com altos picos entre 0.4 e 0.6 .
+
+Uma distribuição bimodal é uma distribuição de probabilidade contínua com duas modas diferentes. 
+
+
+#### Citric.acid
+Presente nas uvas em baixa quantidade, nos vinhos o ácido cítrico tem pouca ou nenhuma presença. Nos vinhos tintos desaparece devido à ação de bactérias láticas (fermentação malolática). Sensorialmente é fresco, porém em alguns casos pode apresentar um leve final amargo.
+```{r}
+summary(wines$citric.acid)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+grid.arrange(ggplot(wines, aes( x = 1, y = citric.acid )) + 
+               geom_jitter(alpha = 0.5 ) +
+               geom_boxplot(alpha = 0.2, color = 'red2' ), 
+ggplot(data = wines, aes(x = citric.acid)) +
+  geom_histogram(binwidth = 0.05, color = 'black',fill = I('orange')),
+  ggplot(data = wines, aes(x = citric.acid)) +scale_x_log10()+
+  geom_histogram(binwidth = 0.05, color = 'black',fill = I('orange')))
+```
+
+Além de contér alguns outliers zerados, essa distribuição parece muito estranha.Os picos giram mais ou menos entre 0.25 e 0.35.
+
+Com a normalização dos dados com o log10, temos uma distribuição bem diferente, se assemelhando a uma distribuição assimetrica negativa.
+
+
+#### Residual.sugar
+A fermentação de um vinho é feita através do contato do açucar com a levedura, após a fermentação resta o açucar residual.
+
+Quando contém até 4 gramas de açucar residual por litro, um vinho pode ser considerado seco, a partir de 25 a 80 gramas é considerado doce ou suave.
+```{r}
+summary(wines$residual.sugar)
+```
+
+```{r}
+var(wines$residual.sugar)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+grid.arrange(ggplot(wines, aes( x = 1, y = residual.sugar )) + 
+               geom_jitter(alpha = 0.4 ) +
+               geom_boxplot(alpha = 0.5, color = 'red' ), 
+ggplot(data = wines, aes(x = residual.sugar)) +
+  geom_histogram(binwidth = 0.4, color = 'black',fill = I('cornflowerblue')),
+  ggplot(data = wines, aes(x = residual.sugar)) +scale_x_log10()+
+  geom_histogram(binwidth = 0.05, color = 'black',fill = I('cornflowerblue')))
+```
+
+Aqui temos mais uma distribuição enviesada positivamente, Açucar residual tem alto pico variando entre 2 e 3. Porém com muitos outliers observados nas faixas mais altas e mesmo com a normalização temos um padrão bem parecido com o anterior.
+
+Com a normalização eliminei bastante outliers, porém o número de outliers positivos ainda é grande. 
+
+#### Chlorides
+
+Chlorides representa a quantidade de sal contidas nos vinhos.
+```{r}
+summary(wines$chlorides)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+grid.arrange(ggplot(wines, aes( x = 1, y = chlorides )) + 
+               geom_jitter(alpha = 0.4 ) +
+               geom_boxplot(alpha = 0.5, color = 'red' ), 
+ggplot(data = wines, aes(x = chlorides)) +
+  geom_histogram(binwidth = 0.01, color = 'black',fill = I('grey')),
+  ggplot(data = wines, aes(x = citric.acid)) +scale_x_log10()+
+  geom_histogram(binwidth = 0.05, color = 'black',fill = I('grey')))
+```
+
+Chlorides tem uma distribuição muito parecida com a de Açucar residual, existe uma grande quantidade de outliers positivos. A médiana está em torno de 0.07
+
+Após a normalização ainda temos bastante outliers à esquerda, lembrando a já citada distribuição assimetrica negativa.
+
+#### Free.sulfur.dioxide
+É uma forma livre de SO2, um gás dissolvido que impede o crescimento de microbios e a oxidação do vinho.
+
+Quantidades excessivas de SO2 podem inibir a fermentação e causar efeitos sensoriais indesejáveis.
+```{r}
+summary(wines$free.sulfur.dioxide)
+```
+
+```{r}
+var(wines$free.sulfur.dioxide)
+```
+
+```{r}
+grid.arrange(ggplot(wines, aes( x = 1, y = free.sulfur.dioxide )) + 
+               geom_jitter(alpha = 0.3 ) +
+               geom_boxplot(alpha = 0.5, color = 'red' ), 
+ggplot(data = wines, aes(x = free.sulfur.dioxide)) +
+  geom_histogram(binwidth = 1.5, color = 'black',fill = I('sienna4')),
+  ggplot(data = wines, aes(x = free.sulfur.dioxide)) +scale_x_log10()+
+  geom_histogram(binwidth = 0.05, color = 'black',fill = I('sienna4')))
+```
+
+Para Free.sulfur.dioxide, há um alto pico envolta de 5 e 7 mais ou menos, porém vemos o padrão comportamental visto nas outras distribuições, uma longa "calda" com outliers positivos.
+
+Mesmo com a normalização vemos uma distribuição estranha, com muitos outliers negativos.
+
+
+#### Total.sulfur.dioxide
+O dióxido de enxofre total (TSO2) é a porção de dioxido de enxofre livre (SO2) que está livre no vinho mais a porção que está ligada a outros produtos químicos no vinho. 
+```{r}
+summary(wines$total.sulfur.dioxide)
+```
+
+```{r}
+var(wines$total.sulfur.dioxide)
+```
+
+```{r}
+grid.arrange(ggplot(wines, aes( x = 1, y = total.sulfur.dioxide )) + 
+               geom_jitter(alpha = 0.3 ) +
+               geom_boxplot(alpha = 0.5, color = 'red' ), 
+ggplot(data = wines, aes(x = total.sulfur.dioxide)) +
+  geom_histogram(binwidth = 3, color = 'black',fill = I('yellowgreen')),
+  ggplot(data = wines, aes(x = total.sulfur.dioxide)) +scale_x_log10()+
+  geom_histogram(binwidth = 0.05, color = 'black',fill = I('yellowgreen')))
+```
+
+Sendo uma porção da variável anterior, o dióxido de enxofre total segue um padrão similar da variavel Free.sulfur.dioxide, com altos picos entre 20 e 40, é uma variável com muitos outliers positivos e com uma variância muito alta.
+
+após a normalização temos uma distribuição um pouco mais normal, com uma alta variação.
+
+
+#### Density
+
+A densidade do vinho se refere ao corpo do vinho, à sensação de maior ou menor densidade que a bebida apresenta.
+
+A densidade do vinho pode variar de acordo com a densidade da água e o teor percentual de álcool e açúcar.
+```{r}
+summary(wines$density)
+```
+
+```{r}
+var(wines$density)
+```
+
+
+```{r}
+grid.arrange(ggplot(wines, aes( x = 1, y = density )) + 
+               geom_jitter(alpha = 0.3 ) +
+               geom_boxplot(alpha = 0.5, color = 'red' ), 
+ggplot(data = wines, aes(x = density)) +
+  geom_histogram(binwidth = 0.001, color = 'black',fill = I('purple2')))
+```
+
+Para densidade, vemos um novo padrão pela primeira vez, densidade contém uma distribuição normal quase perfeita.
+
+#### PH
+```{r}
+summary(wines$pH)
+```
+
+```{r}
+var(wines$pH)
+```
+
+#### PH
+O pH (potencial Hidrogeniônico) é calculado a partir da concentração de íons de hidrogênio. Indica acidez, neutralidade ou alcalinidade de um produto. A escala varia de 0 a 14 e, quanto menor for o índice de pH, maior é a acidez. Abaixo de 7, o pH é ácido, igual a 7 é neutro, e maior que 7 é alcalino.
+
+Nos vinhos em geral, o pH varia de 2,8 (acidez forte) até 3,8 (acidez leve). Com pH acima de 3,5 o vinho é frágil e pode estar sujeito a alterações (defeitos). Um pH baixo tem grande importância na estabilidade do vinho.
+```{r}
+grid.arrange(ggplot(wines, aes( x = 1, y = pH )) + 
+               geom_jitter(alpha = 0.3 ) +
+               geom_boxplot(alpha = 0.5, color = 'red' ), 
+ggplot(data = wines, aes(x = pH)) +
+  geom_histogram(binwidth = 0.1, color = 'black',fill = I('darkorange2')))
+```
+
+
+Ph se assemelha muito a variavel anterior, seguindo o mesmo padrão. Obtendo uma distribuição normal.
+
+
+#### Sulphates
+O termo sulfato é um termo inclusivo para o dióxido de enxofre (SO2), um conservante que é amplamente utilizado na produção de vinho (e na maioria das indústrias alimentícias) por suas propriedades antioxidantes e antibacterianas. O SO2 desempenha um papel importante na prevenção da oxidação e na manutenção da frescura de um vinho.
+```{r}
+summary(wines$sulphates)
+```
+
+```{r}
+var(wines$sulphates)
+```
+
+```{r}
+grid.arrange(ggplot(wines, aes( x = 1, y = sulphates )) + 
+               geom_jitter(alpha = 0.3 ) +
+               geom_boxplot(alpha = 0.5, color = 'red' ), 
+ggplot(data = wines, aes(x = sulphates)) +
+  geom_histogram(binwidth = 0.1, color = 'black',fill = I('powderblue')))
+```
+
+Conforme pode ser observado, esta distribuição segue um padrão assimetrico positivo, devido sua "causa" mais longa à direita.
+
+Há uma similaridade entre as variveis Free/Total sulphur Dioxide e Chlorides. Porém sulphates contém um número menor de outliers positivo se comparado as anteriores.
+
+Por ser uma propriedade que contém dioxido de enxofre(S02) é possivel que tenha uma certa correlação com as variáveis total e free sulfur dioxide
+
+#### Alcohol
+
+Esta variável se refere a porcentagem de alcool contida nos vinhos.
+
+O álcool é a alma do vinho. É a sua maior ou menor presença que define muitas das vezes a sua qualidade. É habitual dizer-se de um vinho com mais de 13% de álcool que é encorpado, vinoso, capitoso, quente. Já um vinho seco com menos de 11% de álcool é um vinho leve, magro, ligeiro e quase sempre desinteressante. Mas álcool em excesso pode tornar um vinho pesado, chato, mole, desinteressante.
+```{r}
+summary(wines$alcohol)
+```
+
+```{r}
+grid.arrange(ggplot(wines, aes( x = 1, y = alcohol )) + 
+               geom_jitter(alpha = 0.3 ) +
+               geom_boxplot(alpha = 0.5, color = 'red2' ), 
+ggplot(data = wines, aes(x = alcohol)) +
+  geom_histogram(binwidth = 0.1, color = 'black',fill = I('orchid2')))
+```
+
+No Alcool é possivel observar que tem uma distribuição enviesada, mantém uma certa semelhança com as distribuições de Chlorides e residual sugar.
+Porém não existe uma grande variação, tendo uma maior concentração de valores mais ou menos em 9%.
+
+### Estrutura dos dados
+A partir da primeira plotagem do gráfico foi possivel perceber que a qualidade dos vinhos não está muito bem distribuida, tendo alguns poucos outliers nas categorias "bom" e "ruim", sendo em grande parte "médio". 
+
+Será que os dados realmente estão completos?
+
+### Hipoteses e insights iniciais
+A acidez (fixa, volátil e cítrica) pode alterar a qualidade do vinho com base em seus valores. O pH também está relacionado a acidez, o que pode surtir algum efeito.
+
+O açucar residual também pode afetar na qualidade final do vinho, uma vez que o açucar pode afetar positivamente ou negativamente o sabor do vinho, adocicando demais ou amargando. Pois o açucar residual é o açucar que não fermentou e não virou alcool.
+
+### Distribuições e outliers
+
+- Fixed and volatile acidity, total/free sulfur dioxides, alcohol e sulphates seguem um padrão de distribuição parecido, padrão assimetrico positivo. Este tipo de distribuição contém uma a cauda à direita, com valores positivos, onde há mais outliers em praticamente todas as variaveis citadas.
+
+- As únicas distribuições que estão mais normalizadas são Density e pH, que seguem um padrão de distribuição normal, com poucos outliers.
+
+- Citric acid tem um grande número de valores zerados, o que pode prejudicar nas proximas análises. Talvez os dados desta variável não estejam completos. 
+
+
+- Residual Sugar e chloride conforme observado contém muitos outliers positivos.
+
+### Insights
+A partir do histograma de residual sugar é possivel perceber que tem uma grande distribuição entre 2 à 4, o que posso supor que grande parte dos vinhos analisados são vinhos mais doces.
+
+O teor alcoolico dos vinhos abaixo de 13% pode indicar vinhos mais leves, maior refrescancia. E o Ph está na média de 3,3. Podendo indicar que os vinhos bem avaliados sejam mais secos e om maior acidez.
+
+## Gráficos Bivariados
+
+### Tabela de Correlação
+
+Aqui criarei uma tabela de correlação para entender quais variaveis deste conjunto de dados estão correlacionadas entre si.
+```{r}
+corrWines <- cor(wines)
+round(corrWines *100,2)
+```
+
+### Plot de correlação 
+```{r}
+corrplot(corrWines, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+
+#### A partir da tabela de correlação temos as seguintes análises:
+
+- Os valores que tem maior correlação com a qualidade são alcohol e volatile acidity.
+
+- Ph tem uma forte correlação negativa com os ácidos (quanto menor o ph maior acidez), porém com volatile acidity há correlação positiva.
+
+- Sulphates e Chlorides tem correlação média, porém somente sulphates tem correlação com a qualidade.
+
+- Density tem forte correlação com os ácidos fixed acidity e citric acid, residual sugar e uma forte correlação negativa com alcohol.
+
+
+#### Plots Bivariados
+
+Conforme visto, Alcohol e volatile acidity tem as maiores correlações com Quality.
+
+### Alcohol vs Quality
+```{r}
+#options(repr.plot.width=6, repr.plot.height=4)  #Setting the plot size
+ggplot(aes(x= factor(quality), y= alcohol), data = wines) +
+  geom_jitter( alpha = .3) +
+  geom_boxplot( alpha = .5,color = 'red3')+
+  stat_summary(fun.y = "mean", geom = "point", color = "red", 
+               shape = 4, size = 6) +
+  labs(x= 'Quality',
+       y= 'Alcohol',
+       title= 'Alcohol vs Quality')
+```
+
+Aqui é possivel perceber que os vinhos avaliados com qualidade média (entre 5 e 6), contém entre 9% e 11% de alcool, fortalecendo a ideia de que a maior parte dos vinhos avaliados são em parte suave ou doce.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x= quality, y= alcohol), data = wines) +
+    geom_violin(trim=FALSE, fill="gray") + 
+    geom_jitter( alpha = .25, color = 'red2') + 
+    stat_summary(fun.y = "mean", geom = "point", color = "black", 
+               shape = 2, size = 4) +
+    labs(x= 'Quality',
+         y= 'Alcohol',
+         title= 'Alcohol Vs. Quality')
+```
+Algo interessante que percebi, é que vinhos com maior teor alcoolico tem mais tendência a serem melhor avaliados. Vinhos com mais de 13% de teor alcoolico tem por volta de avaliação acima de 7 (boa). Alguns valores mais extremos mostram isso.
+
+### Acidity vs Quality
+
+#### Volatile Acidity vs Quality
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+grid.arrange(ggplot(aes(x= quality, y= volatile.acidity), data = wines) +
+    geom_violin(trim=FALSE, fill="gray") + 
+    geom_jitter( alpha = .25, color = 'red2') + 
+    stat_summary(fun.y = "mean", geom = "point", color = "black", 
+               shape = 2, size = 4) +
+    labs(x= 'Quality',
+         y= 'Volatile Acidity',
+         title= 'Volatile Acidity Vs. Quality'))
+```
+Pelo que pude perceber nestes plots, é que a medida que o Volatile acidity aumenta, tem um efeito negativo na qualidade.
+
+#### Fixed Acidity vs Quality
+```{r}
+ggplot(data = wines, aes(x = alcohol, y = fixed.acidity)) +
+  geom_point(alpha = 0.3) +
+  #xlab("Density vs alcohol") +
+  geom_smooth(method="lm",color='red') +
+  labs(x= 'Alcohol',
+       y= 'Fixed Acidity',
+       title= 'Fixed Acidity vs Quality')
+```
+
+ Já os vinhos melhores avaliados contem volatile acidity menor. Já fixed acidity parece não ter nenhum efeito sobre a qualidade final.
+
+#### Sulphates vs Quality 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x= factor(quality), y= sulphates), data = wines) +
+  geom_jitter( alpha = .3) +
+  geom_boxplot( alpha = .5,color = 'red3')+
+  stat_summary(fun.y = "mean", geom = "point", color = "red", 
+               shape = 4, size = 5) +
+  labs(x= 'Quality',
+       y= 'Sulphates',
+       title= 'Sulphates vs Quality')
+```
+
+Sulphates tem correlação com a qualidade, e a partir desse plot é possivel perceber que vinhos com menor quantidade de sulphates tem qualidade média, já os vinhos melhores avaliados contém uma maior quantidade de sulphates.
+
+#### Chrolides vs Quality
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x= factor(quality), y= chlorides), data = wines) +
+  geom_jitter( alpha = .3) +
+  geom_boxplot( alpha = .5,color = 'red3')+
+  stat_summary(fun.y = "mean", geom = "point", color = "red", 
+               shape = 4, size = 5) +
+  labs(x= 'Quality',
+       y= 'Chlorides',
+       title= 'Chlorides vs Quality')
+```
+
+Duas variáveis que eu estava curioso para comparar chlorides e quality, devido a correlação de chlorides e sulphates e não haver forte correlação com quality. É possivel perceber que os vinhos melhores avaliados tem menores valores de chlorides.
+
+#### Density vs Quality
+```{r}
+grid.arrange(ggplot(aes(x= quality, y= density), data = wines) +
+    geom_violin(trim=FALSE, fill="gray") + 
+    geom_jitter( alpha = .25, color = 'red2') + 
+    stat_summary(fun.y = "mean", geom = "point", color = "black", 
+               shape = 2, size = 4) +
+    labs(x= 'Quality',
+         y= 'Density',
+         title= 'Density Vs. Quality'))
+```
+
+#### Alcohol vs Density
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = wines, aes(x = alcohol, y = density)) +
+  geom_point(alpha = 0.3) +
+  #xlab("Density vs alcohol") +
+  geom_smooth(method="lm",color='red') +
+  labs(x= 'Alcohol',
+       y= 'Density',
+       title= 'Alcohol vs Density')
+```
+Os vinhos melhores avaliados tem menor densidade, e contem um maior o teor de alcool,e ao comparar alcohol vs density vemos que isto realmente ocorre e faz muito sentido. Irei verificar isso nos plots multivariados.
+
+
+#### Citric Acid vs Quality
+
+```{r}
+grid.arrange(ggplot(aes(x= quality, y= citric.acid), data = wines) +
+    geom_violin(trim=FALSE, fill="gray") + 
+    geom_jitter( alpha = .25, color = 'red2') + 
+    stat_summary(fun.y = "mean", geom = "point", color = "black", 
+               shape = 2, size = 4) +
+    labs(x= 'Quality',
+         y= 'Citric Acid',
+         title= 'Citric Acid Vs. Quality'))
+```
+
+#### PH vs Quality
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(aes(x= factor(quality), y= pH), data = wines) +
+  geom_jitter( alpha = .3) +
+  geom_boxplot( alpha = .5,color = 'red3')+
+  stat_summary(fun.y = "mean", geom = "point", color = "red", 
+               shape = 4, size = 5) +
+  labs(x= 'Quality',
+       y= 'PH',
+       title= 'PH vs Quality')
+
+```
+E novamente, algo diferente a se perceber, vinhos de melhor qualidade tendem a ter maiores taxas de ácidos citricos, porém o Ph se mantém bem proximo da neutralidade para vinhos de maior qualidade.
+
+
+#### Residual sugar vs Quality
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x= factor(quality), y= residual.sugar), data = wines) +
+  geom_jitter( alpha = .3) +
+  geom_boxplot( alpha = .5,color = 'red3')+
+  stat_summary(fun.y = "mean", geom = "point", color = "red", 
+               shape = 4, size = 5) +
+  labs(x= 'Quality',
+       y= 'Residual Sugar',
+       title= 'Residual Sugar vs Quality')
+```
+Residual sugar parece não surtir tanto efeito na qualidade final, mas o que é possivel perceber é grande parte dos vinhos médios tem mais açucar residual que os melhores avaliados.
+
+### Observações
+ - Vinhos de melhor avaliação tem uma maior concentração de Citric acid. 
+ - Os melhores vinhos tem uma tendencia a ter uma maior acidez.
+ - Os melhores vinhos tem uma quantidade menor de chlorides.
+ - Residual Sugar e fixed acidity parecem não afetar na qualidade final.
+ - Vinhos melhores tem menor densidade e taxa de teor alcoolico maior.
+
+
+## Plots Multivariados
+
+Para ter uma melhor visualização da qualidade dos vinhos, criarei uma nova coluna que categorizará a qualidade em ruim, médio e bom.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wines$Quality.Rating <- ifelse(wines$quality < 5, 'Ruim', ifelse(
+  wines$quality < 7, 'Médio', 'Bom'))
+
+wines$Quality.Rating <- ordered(wines$Quality.Rating,
+                       levels = c('Ruim', 'Médio', 'Bom'))
+```
+
+#### Residual Sugar vs Alcohol vs Quality
+
+Outra variavel que apesar de não ter correlação direta com a qualidade, pode explicar algo. Residual sugar é responsável pela sabor adocicado do vinho, quero entender se os vinhos com avaliação média tem realmente este comportamento.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = wines,
+       aes(y = residual.sugar, x = alcohol,
+           color = factor(quality))) +
+  geom_point(alpha = 0.8, size = 1) +
+  geom_smooth(method = "lm", se = FALSE,size=1)  +
+  facet_wrap(~Quality.Rating) +
+  scale_color_brewer(type='seq',
+                   guide=guide_legend(title='Quality'))+ theme_dark()
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+residualSugarModel <- lm(data=wines,formula = residual.sugar ~  quality)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(residualSugarModel)
+```
+Realmente, Residual sugar não tem nenhuma relação direta a qualidade final dos vinhos.
+
+#### Density vs Citric Acid vs Quality
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(wines, aes(x = density, y = citric.acid, color = as.factor(quality))) +
+  geom_point(alpha = 1/2, position = position_jitter(h = 0), size = 2) +
+  #coord_cartesian(xlim=c(min(wines$density),1.005), ylim=c(8,15)) +
+  scale_color_brewer(type='qual') +
+  ggtitle('Density vs. citric Acid sobre Quality') +
+  ylab("Citric Acid") +
+  xlab("Density") +
+  labs(color = "Quality level") + theme_gray()
+```
+Neste plot é possível esclarecer a suposição de que os melhores vinhos tem acidez um pouco elevada e maior densidade. Enquantos os vinhos médios tem pouca acidez e mais densidade.
+
+#### Alcohol e Density vs Quality
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = wines,
+       aes(y = density, x = alcohol,
+           color = Quality.Rating )) +
+  geom_point(alpha = 0.8, size = 1) +
+  geom_smooth(method = "lm", se = FALSE,size=1)  +
+  scale_color_brewer(type='seq',
+                   guide=guide_legend(title='Quality Level'))+
+      labs(x= 'Alcohol',
+         y= 'Density',
+         title= 'Alcohol vs Density ajustados aos niveis de Quality')+ theme_dark()
+
+```
+Com este plot é possivel esclarecer minha dúvida referente a essas duas variáveis, no qual podemos verificar que quanto maior o teor alcoolico, menor a densidade. E combinados podem afetar na qualidade final.
+
+Para verificar se realmente o alcool tem efeito na qualidade final farei uma regressão linear.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+AlcoholModel <- lm(data=wines,formula = alcohol ~  quality)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(AlcoholModel)
+```
+Conforme visto acima, apesar de Alcohol ter forte correlação com a qualidade, o R² mostra que alcohol tem efeito de 22% sobre a qualidade final, o que não é pouco dado a quantidade de variáveis que podem alterar o fator final.
+  
+  
+#### Alcohol vs Volatile vs Quality
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wines$alcohol.bucket <- cut(wines$alcohol,c(8, 9, 10.5, 12, 16))
+
+ggplot(aes(x = factor(quality), y = volatile.acidity), data = wines) + 
+  geom_boxplot( aes(fill= wines$alcohol.bucket)) +
+  scale_fill_brewer(type='seq',
+                   guide=guide_legend(title='Alcohol % ')) + 
+  labs(x ='Quality', y= 'Volatile acidity (g/dm³)',
+       title= 'Relação entre Alcohol, Volatile Acidity e Quality') + 
+  theme(plot.title = element_text(lineheight=.8, face="bold", hjust=-0.25))
+```
+
+Este é o gráfico que melhor explica a relação entre alcool, acidez e os vinhos de alta e baixa qualidade. As duas variaveis mais correlacionadas com a qualidade.
+
+Aqui podemos perceber que vinhos de qualidade alta não tem menos que 9% teor de alcool, enquanto que vinhos de baixa qualidade não passam de 12% de teor de alcool.
+
+Conforme observado na fase inicial deste projeto, volatile acidity em grande quantidade é propenso a ter um gosto desagradável, se mostrando se a principal caracteristica de vinhos de qualidade inferior.
+
+E aqui também é bem claro perceber a correlação negativamente forte entre a Quality e volatile Acidity.
+
+## Reflexão
+
+Para realizar este projeto, não me atentei somente ao dataset como fiz uma grande pesquisa para poder entender como as principais substâncias químicas podem alterar na Qualidade final dos vinhos. 
+
+O alcool pode sim afetar a qualidade do vinho, porém não tanto quanto a acidez volatile que mostrou ter uma forte correlação com a qualidade. Pois quanto maior a quantide desta substancia maior a chance do vinho se tornar desagradável se comparando ao vinagre, e os vinhos de qualidade inferior mostram muito bem isso no último gráfico.
+
+Por mais que a densidade não altere a qualidade final dos vinhos, foi interessante perceber que quanto maior a quantidade de alcool menor a densidade, devido o alcool ter uma densidade mais baixa que a da água.
+
+É possivel que perceber que os vinhos mais bem avaliados também um certa acidez e menor densidade, logo podendo conter maior teor alcoolico.
+
+Açucar residual não tem relaçao direta com a qualidade, porém o mesmo é responsável pela fermentação, quando em contato com as leveduras. A quantidade de açucar contido nas uvas podem aumentar ou diminuir o teor alcoolico dos vinhos. Algo que é interessante de pontuar é que o clima também pode influenciar na quantidade de alcool fermentado.
+
+Quando a fruta recebe a quantidade necessária de luz solar e calor, o nível de acidez diminui e o de açúcar aumenta. Sendo assim, conhecer o clima e regiões de onde os vinhos vieram seria bom para poder ter uma análise mais concisa.
+
+Infelizmente o dataset contém muitos dados voltados para a qualidade média, tem alguns outliers para as qualidades superior e inferior, o que pode atrapalhar no caso de tentar aplicar algum modelo de Machine learning para encontrar algum padrão.
+
+Com o que foi dito acima, concluirei que os melhores vinhos deste dataset em grande parte são vinhos secos, no quais tem uma maior teor alcoolico, menor densidade acidez e refrescância. E os vinhos de qualidade inferior seguem um padrão oposto, tendo menor teor alcoolico, em parte com muita acidez tornando o vinho desagradável.
+
+Um fator importante de se pontuar é que por mais que este dataset seja completo, as avaliações foram feitas por alguns especialistas, o que talvez possam não trazer a verdadeira análise final sobre qualidade de vinhos, a opinião é muito subjetiva e podemos concordar em muitos pontos e discordar em outros. O mundo dos vinhos é muito vasto e há muito para se aprender e provar.
+
+Fazendo estas análises, eu fui imerso em praticamente um novo mundo, tanto na parte dos vinhos que era algo que nunca havia tido tanto contato, quanto a parte de realizar as análises, plotar e entender os gráficos. Nisso pude me sentir finalmente como um Cientista de dados, porém eu sei que ainda há muito o que aprender e melhorar para meus proximos projetos.
+
+
+
